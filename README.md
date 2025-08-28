@@ -29,7 +29,7 @@ Field Name      | Description
 `github`        | GitHub URL
 `website`       | Website URL
 `documentation` | Link to the documentation
-`category`      | Plugin category from [./lib/categories.ts](./lib/categories.ts)
+`category`      | Plugin category from (TODO: Define a list of categories)
 `type`          | `official` (for litestar-org) or `3rd-party`
 `maintainers`   | List of maintainers each item has `name`, `github` and `avatar`
 `compatibility` | Plugins compatibility status. `litestar` field specifies semver of supported litestar version.
