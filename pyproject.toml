@@ -1,0 +1,24 @@
+[project]
+name = "Litestar-plugins"
+version = "0.1.0"
+description = "Repository to register plugins for the litestar website"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dotenv>=0.9.9",
+    "msgspec>=0.19.0",
+    "niquests>=3.15.2",
+    "pyyaml>=6.0.2",
+    "structlog>=25.4.0",
+]
+
+[project.scripts]
+build = "src.main:build_cli"
+sync = "src.main:sync_all_cli"
+
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[tool.hatch.build]
+packages = ["src"]

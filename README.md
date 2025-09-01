@@ -12,6 +12,20 @@ Create a PR:
 - Copy the [example.yml](example.yml) file.
 - Image must be svg or png
 
+### Commands
+
+- **Sync**: Update plugin metadata from upstream sources
+
+```sh
+uv run sync
+```
+
+- **Build**: Generate the plugins file
+
+```sh
+uv run build
+```
+
 ### Contribution
 
 - If you feel a plugin is missing, please create a new [issue](https://github.com/litestar-org/plugins/issues/new)
@@ -21,6 +35,7 @@ Create a PR:
 
 Field Name      | Description
 ----------------|--------------
+`key`           | Unique identifier for the plugin
 `name`          | Name displayed on the website
 `description`   | Short description
 `repo`          | GitHub repository. Format is `org/name` or `org/name#main/path`
@@ -32,4 +47,6 @@ Field Name      | Description
 `category`      | Plugin category from (TODO: Define a list of categories)
 `type`          | `official` (for litestar-org) or `3rd-party`
 `maintainers`   | List of maintainers each item has `name`, `github` and `avatar`
-`compatibility` | Plugins compatibility status. `litestar` field specifies semver of supported litestar version.
+`compatibility` | Plugins compatibility status. `litestar` field specifies semver of supported litestar version
+`stars`         | GitHub repository star count (auto-populated)
+`latest_version`| Latest version from PyPi (auto-populated)
