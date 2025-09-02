@@ -50,3 +50,6 @@ Field Name      | Description
 `compatibility` | Plugins compatibility status. `litestar` field specifies semver of supported litestar version
 `stars`         | GitHub repository star count (auto-populated)
 `latest_version`| Latest version from PyPi (auto-populated)
+
+> [!WARNING]
+> Modifying the schema there needs to be done also in the litestar.dev website repository.
