@@ -1,5 +1,4 @@
 import asyncio
-import json
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 import yaml
@@ -181,12 +180,12 @@ async def build() -> None:
     # Ensure dist directory exists
     DIST_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Convert plugins to dictionaries for JSON serialization
+    # Convert plugins to dictionaries for YAML serialization
     plugins_data = [msgspec.to_builtins(plugin) for plugin in plugins]
 
-    # Write to JSON file
+    # Write to YAML file
     with open(GENERATED_PLUGIN_DIST_FILE, "w", encoding="utf-8") as f:
-        json.dump(plugins_data, f, indent=2, ensure_ascii=False)
+        yaml.dump(plugins_data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
     await logger.ainfo(
         f"Build process completed successfully. Check out {GENERATED_FILENAME} file"
