@@ -9,7 +9,7 @@ import structlog
 from datetime import datetime
 
 from src.types import PluginInfo
-from src.utils import fetch_pypi, fetch_pypistats, get_github_stars_auth
+from src.utils import fetch_pypi, fetch_pypistats, get_github_stars_auth, parse_requires_python
 from src.constants import (
     PLUGINS_DIR,
     DIST_DIR,
@@ -60,8 +60,9 @@ async def sync(key: str) -> PluginInfo:
             plugin.latest_version = info.get("version")
             
             # Get python compatibility
-            plugin.python_compatibility = info.get("requires_python")
-            
+            plugin.python_compatibility_raw = info.get("requires_python")
+            plugin.python_compatibility = parse_requires_python(plugin.python_compatibility_raw)
+
             # Get changelog and issues from project_urls
             project_urls = info.get("project_urls", {})
             if project_urls:
