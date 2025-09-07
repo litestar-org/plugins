@@ -15,5 +15,11 @@ maintainers:
 compatibility:
   litestar: ^2.0.0 || >=3.0.0
 icon: advanced-alchemy.png
-stars: 632
+stars: 641
+monthly_downloads: 67864
 latest_version: 1.6.2
+updated_at: '2025-08-29T18:41:08'
+created_at: '2023-09-17T17:39:42'
+python_compatibility: '>=3.9'
+changelog: https://docs.advanced-alchemy.litestar.dev/latest/changelog
+issues: https://github.com/litestar-org/advanced-alchemy/issues/

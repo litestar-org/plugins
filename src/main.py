@@ -6,9 +6,10 @@ import yaml
 import glob
 import msgspec
 import structlog
+from datetime import datetime
 
 from src.types import PluginInfo
-from src.utils import fetch_pypi, get_github_stars_auth
+from src.utils import fetch_pypi, fetch_pypistats, get_github_stars_auth
 from src.constants import (
     PLUGINS_DIR,
     DIST_DIR,
@@ -48,11 +49,48 @@ async def sync(key: str) -> PluginInfo:
         if stars is not None:
             plugin.stars = stars
 
-    # Retrieves latest version from PyPI
+    # Retrieves data from PyPI
     if plugin.pypi:
-        latest_version = await fetch_pypi(plugin.pypi)
-        if latest_version:
-            plugin.latest_version = latest_version.get("info", {}).get("version")
+        pypi_data = await fetch_pypi(plugin.pypi)
+        if pypi_data:
+            info = pypi_data.get("info", {})
+            releases = pypi_data.get("releases", {})
+            
+            # Get version
+            plugin.latest_version = info.get("version")
+            
+            # Get python compatibility
+            plugin.python_compatibility = info.get("requires_python")
+            
+            # Get changelog and issues from project_urls
+            project_urls = info.get("project_urls", {})
+            if project_urls:
+                plugin.changelog = project_urls.get("Changelog")
+                plugin.issues = project_urls.get("Issue")
+            
+            # Get created_at and updated_at from releases
+            if releases:
+                upload_times = []
+                for version_releases in releases.values():
+                    for release in version_releases:
+                        if upload_time := release.get("upload_time"):
+                            try:
+                                upload_times.append(datetime.fromisoformat(upload_time.replace('Z', '+00:00')))
+                            except (ValueError, AttributeError):
+                                continue
+                
+                if upload_times:
+                    upload_times.sort()
+                    plugin.created_at = upload_times[0]  # Oldest
+                    plugin.updated_at = upload_times[-1]  # Newest
+        
+    # Retrieves data from PyPI Stats
+    if plugin.pypi:
+        pypistats_data = await fetch_pypistats(plugin.pypi)
+        if pypistats_data:
+            data = pypistats_data.get("data", {})
+            if data:
+                plugin.monthly_downloads = data.get("last_month")
 
     # Convert to dict to manipulate fields
     plugin_dict = msgspec.to_builtins(plugin)

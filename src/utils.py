@@ -30,3 +30,10 @@ async def get_github_stars_auth(repo: str) -> Optional[int]:
     except Exception as e:
         print(f"Error fetching stars for {repo}: {e}")
         return None
+
+async def fetch_pypistats(name: str) -> Dict[str, Any]:
+    """Fetch package info from PyPi Stats."""
+    url: str = f"https://pypistats.org/api/packages/{name}/recent"
+    response: niquests.Response = await niquests.aget(url)
+    response.raise_for_status()
+    return response.json()
