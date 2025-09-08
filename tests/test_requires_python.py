@@ -1,5 +1,5 @@
-import pytest
 from src.utils import parse_requires_python
+
 
 def test_parse_requires_python():
     # Test with a valid requires_python string

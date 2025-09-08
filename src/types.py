@@ -1,7 +1,8 @@
-from typing import Dict, List, Optional, Literal
+from typing import List, Optional, Literal
 import msgspec
 from src.categories import Category
 from datetime import datetime
+
 
 class PluginCompatibility(msgspec.Struct):
     litestar: str
@@ -12,10 +13,12 @@ class MaintainerInfo(msgspec.Struct):
     github: str
     avatar: str
 
+
 class PythonCompatibility(msgspec.Struct):
     raw: str
     specifier_set: str
     compatible: List[str]
+
 
 ModuleType = Literal["official", "3rd-party"]
 

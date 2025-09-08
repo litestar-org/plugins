@@ -20,10 +20,10 @@ Create a PR:
 uv run sync
 ```
 
-- **Build**: Generate the plugins file
+- **Get README**: Fetch README files for all plugins
 
 ```sh
-uv run build
+uv run get-readme
 ```
 
 ### Contribution

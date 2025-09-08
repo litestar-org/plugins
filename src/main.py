@@ -8,13 +8,17 @@ import structlog
 from datetime import datetime
 
 from src.types import PluginInfo
-from src.utils import fetch_pypi, fetch_pypistats, get_github_stars_auth, parse_requires_python
+from src.utils import (
+    fetch_pypi,
+    fetch_pypistats,
+    get_github_stars_auth,
+    parse_requires_python,
+    get_github_readme,
+)
 from src.constants import (
     PLUGINS_DIR,
-    DIST_DIR,
-    GENERATED_PLUGIN_DIST_FILE,
     ROOT_DIR,
-    GENERATED_FILENAME,
+    READMES_DIR,
     DEFAULT_PLUGIN_ICON,
 )
 
@@ -54,20 +58,22 @@ async def sync(key: str) -> PluginInfo:
         if pypi_data:
             info = pypi_data.get("info", {})
             releases = pypi_data.get("releases", {})
-            
+
             # Get version
             plugin.latest_version = info.get("version")
-            
+
             # Get python compatibility
             plugin.python_compatibility_raw = info.get("requires_python")
-            plugin.python_compatibility = parse_requires_python(plugin.python_compatibility_raw)
+            plugin.python_compatibility = parse_requires_python(
+                plugin.python_compatibility_raw
+            )
 
             # Get changelog and issues from project_urls
             project_urls = info.get("project_urls", {})
             if project_urls:
                 plugin.changelog = project_urls.get("Changelog")
                 plugin.issues = project_urls.get("Issue")
-            
+
             # Get created_at and updated_at from releases
             if releases:
                 upload_times = []
@@ -75,15 +81,19 @@ async def sync(key: str) -> PluginInfo:
                     for release in version_releases:
                         if upload_time := release.get("upload_time"):
                             try:
-                                upload_times.append(datetime.fromisoformat(upload_time.replace('Z', '+00:00')))
+                                upload_times.append(
+                                    datetime.fromisoformat(
+                                        upload_time.replace("Z", "+00:00")
+                                    )
+                                )
                             except (ValueError, AttributeError):
                                 continue
-                
+
                 if upload_times:
                     upload_times.sort()
                     plugin.created_at = upload_times[0]  # Oldest
                     plugin.updated_at = upload_times[-1]  # Newest
-        
+
     # Retrieves data from PyPI Stats
     if plugin.pypi:
         pypistats_data = await fetch_pypistats(plugin.pypi)
@@ -171,30 +181,55 @@ async def sync_all() -> Dict[str, Any]:
     return {"count": len(updated_plugins), "success": success}
 
 
-async def build() -> None:
-    """Build the final modules.json file."""
-    await logger.ainfo("Build process started")
+async def get_readme() -> None:
+    """Fetch README files for all plugins."""
+    await logger.ainfo("Get README process started")
 
     plugins = await read_plugins()
+    READMES_DIR.mkdir(exist_ok=True)
 
-    # Ensure dist directory exists
-    DIST_DIR.mkdir(parents=True, exist_ok=True)
+    # Rate limiting using semaphore
+    semaphore = asyncio.Semaphore(10)
 
-    # Convert plugins to dictionaries for YAML serialization
-    plugins_data = [msgspec.to_builtins(plugin) for plugin in plugins]
+    async def fetch_readme_with_limit(plugin: PluginInfo) -> Optional[str]:
+        async with semaphore:
+            try:
+                await logger.ainfo(f"Fetching README for plugin {plugin.key}")
 
-    # Write to YAML file
-    with open(GENERATED_PLUGIN_DIST_FILE, "w", encoding="utf-8") as f:
-        yaml.dump(plugins_data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+                readme_content = await get_github_readme(plugin.repo)
+                if readme_content:
+                    readme_file: Path = READMES_DIR.joinpath(f"{plugin.key}.md")
+
+                    with open(readme_file, "w", encoding="utf-8") as f:
+                        f.write(readme_content)
+
+                    await logger.ainfo(f"README saved for {plugin.key}")
+                    return readme_content
+                else:
+                    await logger.awarning(f"No README found for {plugin.key}")
+                    return None
+
+            except Exception as err:
+                await logger.aerror(
+                    f"Error fetching README for {plugin.key}", error=str(err)
+                )
+                return None
+
+    tasks = [fetch_readme_with_limit(plugin) for plugin in plugins]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    success_count = sum(
+        1 for r in results if r is not None and not isinstance(r, Exception)
+    )
 
     await logger.ainfo(
-        f"Build process completed successfully. Check out {GENERATED_FILENAME} file"
+        f"Get README process completed. Fetched {success_count} READMEs out of {len(plugins)} plugins"
     )
 
 
-def build_cli() -> None:
-    """CLI wrapper for the build command."""
-    asyncio.run(build())
+def get_readme_cli() -> None:
+    """CLI wrapper for the get-readme command."""
+    asyncio.run(get_readme())
 
 
 def sync_all_cli() -> None:

@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-build = "src.main:build_cli"
+get-readme = "src.main:get_readme_cli"
 sync = "src.main:sync_all_cli"
 
 [build-system]
@@ -27,4 +27,5 @@ packages = ["src"]
 [dependency-groups]
 dev = [
     "pytest>=8.4.2",
+    "ruff>=0.12.12",
 ]
