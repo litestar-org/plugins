@@ -207,7 +207,7 @@ async def get_readme() -> None:
     success_count: int = sum(1 for r in results if r is not None and not isinstance(r, Exception))
     
     await logger.ainfo(
-        f"Get README process completed. Fetched {success_count} READMEs out of {len(plugins)} plugins"
+        "Get README process completed.", count=success_count, total=len(plugins)
     )
 
 
