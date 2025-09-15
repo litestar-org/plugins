@@ -9,4 +9,4 @@ GENERATED_FILENAME = "plugins.yml"
 GENERATED_PLUGIN_DIST_FILE: Path = DIST_DIR.joinpath(GENERATED_FILENAME)
 
 # Default plugin icon
-DEFAULT_PLUGIN_ICON = "_default_icon.png"
+DEFAULT_PLUGIN_ICON = "_default_icon.svg"
