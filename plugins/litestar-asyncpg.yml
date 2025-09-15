@@ -1,0 +1,35 @@
+key: litestar-asyncpg
+name: Litestar AsyncPG
+description: AsyncPG Plugin for Litestar
+pypi: litestar-asyncpg
+repo: litestar-org/litestar-asyncpg
+github: https://github.com/litestar-org/litestar-asyncpg
+website: https://github.com/litestar-org/litestar-asyncpg
+documentation: https://docs.advanced-alchemy.litestar.dev
+category: Database
+type: official
+maintainers:
+- name: Cody Fincher
+  github: cofin
+  avatar: https://https://avatars.githubusercontent.com/u/204685?v=4
+compatibility:
+  litestar: '>=2.0.0'
+icon: litestar-asyncpg.svg
+stars: 10
+monthly_downloads: 388
+latest_version: 0.5.0
+updated_at: '2025-06-24T16:45:09'
+created_at: '2023-10-01T23:31:27'
+python_compatibility_raw: '>=3.9'
+python_compatibility:
+  raw: '>=3.9'
+  specifier_set: '>=3.9'
+  compatible:
+  - '3.9'
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  - '3.14'
+changelog: https://litestar-org.github.io/litesatr-asyncpg/latest/changelog
+issues: https://github.com/litestar-org/litestar-asyncpg/issues/
