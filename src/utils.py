@@ -71,15 +71,12 @@ def parse_requires_python(requires_python: str) -> PythonCompatibility:
         compatible_versions: list[str] = []
         # Test common Python versions
         python_versions: list[str] = [
-            "3.7",
-            "3.8",
             "3.9",
             "3.10",
             "3.11",
             "3.12",
             "3.13",
             "3.14",
-            "3.15",
         ]
 
         for version in python_versions:
