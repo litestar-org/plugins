@@ -1,16 +1,17 @@
 name: Create Release on PR Merge
 
 on:
-  pull_request:
+  workflow_run:
+    workflows: ["Update Plugin Data"]
     types:
-      - closed
+      - completed
     branches:
       - main
 
 jobs:
   create-release:
-    # Only run if the PR was merged (not just closed)
-    if: github.event.pull_request.merged == true
+    # Only run if the update workflow succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
