@@ -1,0 +1,68 @@
+name: Create Release on PR Merge
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  create-release:
+    # Only run if the PR was merged (not just closed)
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: main
+      
+      - name: Generate release tag
+        id: tag
+        run: |
+          # Generate CalVer format: YY.MM.DD
+          CALVER=$(date +'%y.%m.%d')
+          
+          # Check if a release with this CalVer already exists
+          COUNTER=0
+          TAG="$CALVER"
+          
+          # Fetch existing tags
+          git fetch --tags
+          
+          # Find the highest counter for today's releases
+          while git rev-parse "refs/tags/$TAG" >/dev/null 2>&1; do
+            COUNTER=$((COUNTER + 1))
+            TAG="$CALVER.$COUNTER"
+          done
+          
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Generated tag: $TAG"
+      
+      - name: Create zip archives
+        run: |
+          zip -r plugins.zip plugins/
+          zip -r readmes.zip readmes/
+          zip -r plugins-and-readmes.zip plugins/ readmes/
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Release ${{ steps.tag.outputs.tag }}
+          body: |
+            Automatic release created from PR merge
+            
+            **PR**: #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}
+            **Merged by**: @${{ github.event.pull_request.merged_by.login }}
+            **Commit**: ${{ github.sha }}
+          files: |
+            plugins.zip
+            readmes.zip
+            plugins-and-readmes.zip
+          draft: false
+          prerelease: false
