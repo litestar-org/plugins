@@ -1,0 +1,43 @@
+name: Create Artifacts on PR Merge
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  create-artifacts:
+    # Only run if the PR was merged (not just closed)
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: main
+      
+      - name: Archive plugins folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugins-${{ github.sha }}
+          path: plugins/
+          if-no-files-found: warn
+      
+      - name: Archive readmes folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: readmes-${{ github.sha }}
+          path: readmes/
+          if-no-files-found: warn
+      
+      - name: Create combined artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugins-and-readmes-${{ github.sha }}
+          path: |
+            plugins/
+            readmes/
+          if-no-files-found: warn
