@@ -1,55 +1,96 @@
-name: Create Release on PR Merge
+name: PR Merge Pipeline
 
 on:
-  workflow_run:
-    workflows: ["Update Plugin Data"]
+  pull_request:
     types:
-      - completed
+      - closed
     branches:
       - main
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
-  create-release:
-    # Only run if the update workflow succeeded
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  update-data:
+    # Only run if the PR was merged (not just closed)
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Sync plugin metadata
+        run: uv run sync
+
+      - name: Get README files
+        run: uv run get-readme
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git diff --exit-code || echo "has_changes=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push changes
+        if: steps.git-check.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          git commit -m "chore: update plugin metadata and READMEs [automated]"
+          git push
+
+      - name: No changes detected
+        if: steps.git-check.outputs.has_changes != 'true'
+        run: echo "No changes to commit"
+
+  create-release:
+    # Only run after update-data job completes successfully
+    needs: update-data
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
           ref: main
-      
+
       - name: Generate release tag
         id: tag
         run: |
           # Generate CalVer format: YY.MM.DD
           CALVER=$(date +'%y.%m.%d')
-          
+
           # Check if a release with this CalVer already exists
           COUNTER=0
           TAG="$CALVER"
-          
+
           # Fetch existing tags
           git fetch --tags
-          
+
           # Find the highest counter for today's releases
           while git rev-parse "refs/tags/$TAG" >/dev/null 2>&1; do
             COUNTER=$((COUNTER + 1))
             TAG="$CALVER.$COUNTER"
           done
-          
+
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "Generated tag: $TAG"
-      
+
       - name: Create zip archives
         run: |
           zip -r plugins.zip plugins/
           zip -r readmes.zip readmes/
           zip -r plugins-and-readmes.zip plugins/ readmes/
-      
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -57,7 +98,7 @@ jobs:
           name: Release ${{ steps.tag.outputs.tag }}
           body: |
             Automatic release created from PR merge
-            
+
             **PR**: #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}
             **Merged by**: @${{ github.event.pull_request.merged_by.login }}
             **Commit**: ${{ github.sha }}
