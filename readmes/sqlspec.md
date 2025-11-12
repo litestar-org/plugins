@@ -14,7 +14,7 @@ SQLSpec is an experimental Python library designed to streamline and modernize y
 - **Emphasis on RAW SQL and Minimal Abstractions**: SQLSpec is a library for working with SQL in Python. Its goals are to offer minimal abstractions between the user and the database. It does not aim to be an ORM library.
 - **Type-Safe Queries**: Quickly map SQL queries to typed objects using libraries such as Pydantic, Msgspec, Attrs, etc.
 - **Extensible Design**: Easily add support for new database dialects or extend existing functionality to meet your specific needs. Easily add support for async and sync database drivers.
-- **Minimal Dependencies**: SQLSpec is designed to be lightweight and can run on its own or with other libraries such as `litestar`, `fastapi`, `flask` and more. (Contributions welcome!)
+- **Framework Extensions**: First-class integrations for Litestar, Starlette, and FastAPI with automatic transaction handling and lifecycle management
 - **Support for Async and Sync Database Drivers**: SQLSpec supports both async and sync database drivers, allowing you to choose the style that best fits your application.
 
 ### Experimental Features (API will change rapidly)
@@ -303,26 +303,50 @@ SQLSpec includes a built-in migration system for managing schema changes. After 
 
 ```bash
 # Initialize migration directory
-sqlspec db init migrations
+sqlspec --config myapp.config init
 
 # Generate new migration file
-sqlspec db make-migrations "Add user table"
+sqlspec --config myapp.config create-migration -m "Add user table"
 
 # Apply all pending migrations
-sqlspec db upgrade
+sqlspec --config myapp.config upgrade
 
 # Show current migration status
-sqlspec db show-current-revision
+sqlspec --config myapp.config show-current-revision
 ```
 
 For Litestar applications, replace `sqlspec` with your application command:
 
 ```bash
 # Using Litestar CLI integration
-litestar db make-migrations "Add user table"
-litestar db upgrade
-litestar db show-current-revision
+litestar database create-migration -m "Add user table"
+litestar database upgrade
+litestar database show-current-revision
 ```
+
+### Shell Completion
+
+SQLSpec CLI supports tab completion for bash, zsh, and fish shells. Enable it with:
+
+```bash
+# Bash - add to ~/.bashrc
+eval "$(_SQLSPEC_COMPLETE=bash_source sqlspec)"
+
+# Zsh - add to ~/.zshrc
+eval "$(_SQLSPEC_COMPLETE=zsh_source sqlspec)"
+
+# Fish - add to ~/.config/fish/completions/sqlspec.fish
+eval (env _SQLSPEC_COMPLETE=fish_source sqlspec)
+```
+
+After setup, you can tab-complete commands and options:
+
+```bash
+sqlspec <TAB>         # Shows: create-migration, downgrade, init, ...
+sqlspec upgrade --<TAB>  # Shows: --bind-key, --help, --no-prompt, ...
+```
+
+See the [CLI documentation](https://sqlspec.litestar.dev/usage/cli.html) for complete setup instructions.
 
 ### Basic Litestar Integration
 
@@ -337,23 +361,18 @@ In this example we demonstrate how to create a basic configuration that integrat
 # ///
 
 from litestar import Litestar, get
-
+from sqlspec import SQLSpec
 from sqlspec.adapters.aiosqlite import AiosqliteConfig, AiosqliteDriver
-from sqlspec.extensions.litestar import DatabaseConfig, SQLSpec
-
+from sqlspec.extensions.litestar import SQLSpecPlugin
 
 @get("/")
 async def simple_sqlite(db_session: AiosqliteDriver) -> dict[str, str]:
     return await db_session.select_one("SELECT 'Hello, world!' AS greeting")
 
 
-sqlspec = SQLSpec(
-    config=DatabaseConfig(
-        config=AiosqliteConfig(pool_config={"database": ":memory:"}), # built in local pooling
-        commit_mode="autocommit"
-    )
-)
-app = Litestar(route_handlers=[simple_sqlite], plugins=[sqlspec])
+sqlspec = SQLSpec()
+sqlspec.add_config(AiosqliteConfig(pool_config={"database": ":memory:"}))
+app = Litestar(route_handlers=[simple_sqlite], plugins=[SQLSpecPlugin(sqlspec)])
 ```
 
 ## Inspiration and Future Direction
