@@ -28,7 +28,7 @@ uv run get-readme
 
 ### Contribution
 
-- If you feel a plugin is missing, please create a new [issue](https://github.com/litestar-org/plugins/issues/new)
+- If you feel a plugin is missing, please create a new [issue](https://github.com/litestar-org/plugin-registry/issues/new)
 - If some data is outdated please directly open a pull request
 
 ### Schema
